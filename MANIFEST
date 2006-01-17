@@ -1,0 +1,16 @@
+Changes
+MANIFEST
+Makefile.PL
+README
+lib/Class/DBI/Replicated.pm
+lib/Class/DBI/Replicated/Pg/Slony1.pm
+lib/Class/DBI/Replicated/mysql.pm
+lib/Class/DBI/Replicated/Test.pm
+lib/Class/DBI/Replicated/Test/Pg/Slony1.pm
+lib/Class/DBI/Replicated/Test/mysql.pm
+t/00-load.t
+t/pod-coverage.t
+t/pod.t
+t/mysql.t
+t/pg-slony1.t
+META.yml                                 Module meta-data (added by MakeMaker)

@@ -1,0 +1,15 @@
+# http://module-build.sourceforge.net/META-spec.html
+#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
+name:         Class-DBI-Replicated
+version:      0.01
+version_from: lib/Class/DBI/Replicated.pm
+installdirs:  site
+requires:
+    Class::Accessor::Class:        0
+    Class::Data::Inheritable:      0
+    Class::DBI:                    3.0.1
+    Params::Validate:              0.74
+    Test::More:                    0
+
+distribution_type: module
+generated_by: ExtUtils::MakeMaker version 6.30
