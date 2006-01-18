@@ -14,6 +14,7 @@ WriteMakefile(
 	'Params::Validate' => '0.74',
 	'Class::Data::Inheritable' => 0,
 	'Class::Accessor::Class' => 0,
+	'Sub::Install' => 0,
     },
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean               => { FILES => 'Class-DBI-Replicated-*' },
