@@ -21,7 +21,7 @@ SKIP: {
 DELETE FROM repl_test;
 
          $class->search(id => 0);
-  is($buf->[-1], "repl_db db_Slave_localhost",
+  is($buf->[-1], "repl_db db_Slave_slave1",
      "pre-write SELECT used slave");
 
   $class->create({
@@ -35,28 +35,27 @@ DELETE FROM repl_test;
 
   my ($obj) = $class->search(name => 'test 1');
 
-  is($buf->[-2], "repl_db db_Master",
+  is $buf->[-1], "repl_check", "SELECT triggered check";
+  pop @{$buf} while $buf->[-1] eq "repl_check";
+  is($buf->[-1], "repl_db db_Master",
      "post-write SELECT used master");
-  is($buf->[-1], "repl_check",
-     "SELECT triggered check");
-  #is($buf->[-1], "switch_to_slave localhost",
+  #is($buf->[-1], "switch_to_slave slave1",
   #   "SELECT switched back to slave");
-
+  
   $class->wait_for_slave;
 
   # for Pg, the SELECT will almost certainly not have done this
-  is($buf->[-1], "switch_to_slave localhost",
+  is($buf->[-1], "switch_to_slave slave1",
      "waiting for slave");
-
   $obj = $class->retrieve($obj->id);
 
-  is($buf->[-1], "repl_db db_Slave_localhost",
+  is($buf->[-1], "repl_db db_Slave_slave1",
      "SELECT used slave");
 
   $oldsize = @$buf;
   $obj = $class->retrieve($obj->id);
 
-  is($buf->[-1], "repl_db db_Slave_localhost",
+  is($buf->[-1], "repl_db db_Slave_slave1",
      "SELECT used slave");
   is(scalar @$buf, $oldsize + 1,
      "no extra repl_check was done");

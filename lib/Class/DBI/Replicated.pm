@@ -15,11 +15,11 @@ Class::DBI::Replicated - Replication from single master to multiple slaves
 
 =head1 VERSION
 
-Version 0.03
+Version 0.040
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.040';
 
 =head1 SYNOPSIS
 
@@ -81,6 +81,7 @@ sub replication_db {
 }
 
 __PACKAGE__->mk_classdata('__replication_std_triggers');
+__PACKAGE__->mk_classdata('__force_master');
 
 sub replication {
   my $class = shift;
@@ -98,13 +99,13 @@ sub replication {
       $class->replication_args,
     }
   ) };
+
   $class->mk_class_accessors(
     '__slave_names',
     '__slave_db',
     '__replication_db',
     '__repl_user',
     '__repl_pass',
-    '__force_master',
     '__replication_setup',
     'repl_pos',
   );
@@ -118,6 +119,7 @@ sub replication {
   $class->replication_setup($arg);
 
   my @slaves = @{$arg->{slaves}};
+
   if (!@slaves or @slaves % 2) {
     croak "list of slaves must be name => dsn pairs\n";
   }
@@ -133,11 +135,12 @@ sub replication {
   my @names;
   while (my ($name, $dsn) = splice @slaves, 0, 2) {
     push @names, $name;
-    $class->Ima::DBI::set_db("Slave_$name" => @$dsn);
+    my $slave_arg = ref $dsn eq 'HASH' ? $dsn : { dsn => $dsn };
+    $class->Ima::DBI::set_db("Slave_$name" => @{ $slave_arg->{dsn} });
     if ($arg->{user}) {
       $class->Ima::DBI::set_db(
         "Slave_$name\_Repl",
-        $dsn->[0],
+        $slave_arg->{dsn}->[0],
         $arg->{user},
         $arg->{password},
       );
@@ -375,9 +378,7 @@ sub repl_check {
       $return;
     }
   };
-  if ($class->repl_compare(
-    $slave_pos, $class->repl_pos
-  )) {
+  if ($slave_pos && $class->repl_compare($slave_pos, $class->repl_pos)) {
     $class->repl_pos(undef);
     return 1;
   }

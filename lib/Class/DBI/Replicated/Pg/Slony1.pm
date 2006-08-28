@@ -46,21 +46,31 @@ sub replication_setup {
   $class->mk_class_accessors(
     '__slony1_schema',
     '__slony1_origin',
+    '__slony1_slave_node'
   );
   $class->__slony1_schema($arg->{slony1_schema});
   $class->__slony1_origin($arg->{slony1_origin});
+  my %origin;
+  my @slaves = @{ $arg->{slaves} };
+  while (my ($name, $slave_arg) = splice @slaves, 0, 2) {
+    $origin{"Slave_$name"} = $slave_arg->{node};
+  }
+  $class->__slony1_slave_node(\%origin);
 }
 
 # add 1 because of how slony1 works; that is, we care about
 # the next event generated, not the last one
 __PACKAGE__->set_sql(master_status => <<'', 'Master_Repl');
-SELECT last_value + 1
-FROM %s.sl_event_seq
+SELECT st_last_event + 1
+FROM %s.sl_status
+WHERE st_origin = ?
+LIMIT 1
 
-__PACKAGE__->set_sql(slave_status  => <<'', 'Slave_Repl');
-SELECT max(con_seqno)
-FROM %s.sl_confirm
-WHERE con_origin = ?
+__PACKAGE__->set_sql(slave_status  => <<'', 'Master_Repl');
+SELECT st_last_received
+FROM %s.sl_status
+WHERE st_received = ?
+LIMIT 1
 
 =head1 METHODS
 
@@ -73,7 +83,9 @@ sub repl_get_master {
   $class->repl_pos(
     $class->sql_master_status(
       $class->__slony1_schema
-    )->select_val
+    )->select_val(
+      1
+    ),
   );
 }
   
@@ -87,7 +99,7 @@ sub repl_get_slave {
     $class->__slony1_schema
   );
   return $sth->select_val(
-    $class->__slony1_origin
+    $class->__slony1_slave_node->{$class->__slave_db}
   );
 }
 
@@ -97,7 +109,6 @@ sub repl_get_slave {
 
 sub repl_compare {
   my ($class, $test, $ref) = @_;
-  #warn "### $class: ($test, $ref)\n";
   return $test >= $ref;
 }
 

@@ -15,7 +15,7 @@ use warnings;
 use base qw(Class::DBI::Replicated::Test
             Class::DBI::Replicated::Pg::Slony1);
 
-my @from_env = qw(db user pass host repl_user repl_pass schema);
+my @from_env = qw(db user pass host slave_host slave_node repl_user repl_pass schema);
 my %cfg;
 
 for my $key (@from_env) {
@@ -30,10 +30,13 @@ __PACKAGE__->replication({
     $cfg{user}, $cfg{pass}, { AutoCommit => 1 },
   ],
   slaves => [
-    localhost => [
-      "dbi:Pg:dbname=$cfg{db}",
-      $cfg{user}, $cfg{pass},
-    ],
+    slave1 => {
+      dsn => [
+        "dbi:Pg:dbname=$cfg{db};host=$cfg{slave_host}",
+        $cfg{user}, $cfg{pass},
+      ],
+      node => $cfg{slave_node},
+    }
   ],
 
   user     => $cfg{repl_user},
@@ -62,5 +65,6 @@ CREATE TABLE repl_test (
 #__PACKAGE__->table('repl_test');
 #__PACKAGE__->columns(All => qw(id name flavor));
 __PACKAGE__->set_up_table('repl_test');
+__PACKAGE__->sequence('repl_test_id_seq');
 
 1;

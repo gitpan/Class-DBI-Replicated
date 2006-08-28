@@ -16,7 +16,6 @@ sub _mk_output {
     my $class = shift;
     my $tmp = $text;
     $tmp .= " @_" if @_;
-    #warn "### $class: $tmp\n";
     return unless $class->repl_output;
     push @{$class->repl_output}, $tmp;
   };
